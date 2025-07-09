@@ -16,13 +16,13 @@ class MyTodoApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => TaskProvider(),
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Todo App',
         theme: ThemeData(primarySwatch: Colors.blue),
         initialRoute: '/',
         routes: {
           '/': (ctx) => HomeScreen(),
           '/add-task': (ctx) => AddTaskScreen(),
-          // Add more routes if needed
         },
       ),
     );
