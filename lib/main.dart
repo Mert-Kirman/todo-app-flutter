@@ -18,7 +18,12 @@ class MyTodoApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Todo App',
-        theme: ThemeData(primarySwatch: Colors.blue),
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.teal,
+            brightness: Brightness.dark,
+          ),
+        ),
         initialRoute: '/',
         routes: {
           '/': (ctx) => HomeScreen(),
