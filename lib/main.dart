@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:todo_app_flutter/bloc/task_event.dart';
 import 'screens/home_screen.dart';
 import 'screens/add_task_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,7 +15,7 @@ class MyTodoApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => TaskBloc(),
+      create: (context) => TaskBloc()..add(LoadTasks()),
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Todo App',

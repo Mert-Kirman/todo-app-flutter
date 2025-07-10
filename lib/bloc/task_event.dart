@@ -1,5 +1,7 @@
 abstract class TaskEvent {}
 
+class LoadTasks extends TaskEvent {}
+
 class ToggleTaskStatus extends TaskEvent {
   final String id;
   final bool? isDone;
