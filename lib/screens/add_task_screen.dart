@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/task_provider.dart';
-import '../models/task.dart';
+import 'package:todo_app_flutter/bloc/task_bloc.dart';
+import 'package:todo_app_flutter/bloc/task_event.dart';
 
 class AddTaskScreen extends StatelessWidget {
   final TextEditingController _taskController = TextEditingController();
@@ -11,9 +11,7 @@ class AddTaskScreen extends StatelessWidget {
   void _addTask(BuildContext context) {
     final taskText = _taskController.text;
     if (taskText.isNotEmpty) {
-      Provider.of<TaskProvider>(context, listen: false).addTask(
-        Task(id: DateTime.now().toString(), title: taskText, isDone: false),
-      );
+      context.read<TaskBloc>().add(AddTask(taskText));
       Navigator.of(context).pop();
     }
   }

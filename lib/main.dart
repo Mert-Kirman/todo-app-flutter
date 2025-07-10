@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/add_task_screen.dart';
-import 'providers/task_provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'bloc/task_bloc.dart';
 
 void main() {
   runApp(MyTodoApp());
@@ -13,8 +13,8 @@ class MyTodoApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => TaskProvider(),
+    return BlocProvider(
+      create: (context) => TaskBloc(),
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Todo App',

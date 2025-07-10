@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/task_provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:todo_app_flutter/bloc/task_bloc.dart';
+import 'package:todo_app_flutter/bloc/task_event.dart';
+import 'package:todo_app_flutter/bloc/task_state.dart';
 import '../widgets/task_tile.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -8,28 +10,27 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tasks = Provider.of<TaskProvider>(context).tasks;
-
     return Scaffold(
       appBar: AppBar(title: Text('Todo List')),
-      body: ListView.builder(
-        itemCount: tasks.length,
-        itemBuilder: (ctx, index) {
-          final task = tasks[index];
-          return TaskTile(
-            title: task.title,
-            isDone: task.isDone,
-            onChanged: (value) {
-              Provider.of<TaskProvider>(
-                context,
-                listen: false,
-              ).toggleTaskStatus(task.id, value);
-            },
-            onDelete: () {
-              Provider.of<TaskProvider>(
-                context,
-                listen: false,
-              ).deleteTask(task.id);
+      body: BlocBuilder<TaskBloc, TaskState>(
+        builder: (context, state) {
+          final tasks = state.tasks;
+          return ListView.builder(
+            itemCount: tasks.length,
+            itemBuilder: (ctx, index) {
+              final task = tasks[index];
+              return TaskTile(
+                title: task.title,
+                isDone: task.isDone,
+                onChanged: (value) {
+                  context.read<TaskBloc>().add(
+                    ToggleTaskStatus(task.id, value),
+                  );
+                },
+                onDelete: () {
+                  context.read<TaskBloc>().add(DeleteTask(task.id));
+                },
+              );
             },
           );
         },
