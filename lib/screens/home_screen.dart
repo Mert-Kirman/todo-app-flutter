@@ -14,6 +14,9 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(title: Text('Todo List')),
       body: BlocBuilder<TaskBloc, TaskState>(
         builder: (context, state) {
+          if (state.error != null) {
+            return Center(child: Text('Error: ${state.error}'));
+          }
           final tasks = state.tasks;
           return ListView.builder(
             itemCount: tasks.length,
@@ -21,7 +24,7 @@ class HomeScreen extends StatelessWidget {
               final task = tasks[index];
               return TaskTile(
                 title: task.title,
-                isDone: task.isDone,
+                completed: task.completed,
                 onChanged: (value) {
                   context.read<TaskBloc>().add(
                     ToggleTaskStatus(task.id, value),

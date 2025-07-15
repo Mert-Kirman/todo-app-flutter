@@ -3,17 +3,29 @@ abstract class TaskEvent {}
 class LoadTasks extends TaskEvent {}
 
 class ToggleTaskStatus extends TaskEvent {
-  final String id;
-  final bool? isDone;
-  ToggleTaskStatus(this.id, this.isDone);
+  final int id;
+  final bool? completed;
+  ToggleTaskStatus(this.id, this.completed);
 }
 
 class AddTask extends TaskEvent {
   final String title;
-  AddTask(this.title);
+  final String? description;
+  final bool? completed;
+  final DateTime? dueDate;
+  final int? priority;
+  final String? category;
+  AddTask(
+    this.title, {
+    this.description,
+    this.completed,
+    this.dueDate,
+    this.priority,
+    this.category,
+  });
 }
 
 class DeleteTask extends TaskEvent {
-  final String id;
+  final int id;
   DeleteTask(this.id);
 }
