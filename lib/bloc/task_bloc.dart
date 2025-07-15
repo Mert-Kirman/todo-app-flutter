@@ -1,65 +1,78 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:todo_app_flutter/models/task.dart';
+import 'package:todo_app_flutter/services/todo_api_service.dart';
 import 'task_event.dart';
 import 'task_state.dart';
-import 'package:localstore/localstore.dart';
 
 class TaskBloc extends Bloc<TaskEvent, TaskState> {
-  final db = Localstore.instance;
-  final String collection = 'tasks';
+  final TodoApiService apiService = TodoApiService();
 
   TaskBloc() : super(const TaskState()) {
     on<LoadTasks>((event, emit) async {
-      final items = await db.collection(collection).get(); // Load all tasks
-      final tasks = items?.values.map((e) => Task.fromMap(e)).toList() ?? [];
-      emit(TaskState(tasks: tasks));
+      try {
+        final todos = await apiService.fetchTodos(event.token);
+        emit(TaskState(tasks: todos));
+      } catch (e) {
+        emit(TaskState(tasks: [], error: e.toString()));
+      }
     });
 
     on<ToggleTaskStatus>((event, emit) async {
-      final updatedTasks = state.tasks.map((task) {
-        if (task.id == event.id) {
-          return task.copyWith(isDone: event.isDone ?? false);
-        }
-        return task;
-      }).toList();
+      try {
+        final updatedTasks = state.tasks.map((task) {
+          if (task.id == event.id) {
+            return task.copyWith(completed: event.completed ?? false);
+          }
+          return task;
+        }).toList();
 
-      // Save the updated task to localstore (only one)
-      final updatedTask = updatedTasks.firstWhere(
-        (task) => task.id == event.id,
-      );
-      await db
-          .collection(collection)
-          .doc(updatedTask.id)
-          .set(updatedTask.toMap());
+        final updatedTask = updatedTasks.firstWhere(
+          (task) => task.id == event.id,
+        );
 
-      emit(TaskState(tasks: updatedTasks));
+        // Update the task status on the server
+        await apiService.updateTodo(updatedTask, event.token);
+
+        // Update state
+        emit(TaskState(tasks: updatedTasks));
+      } catch (e) {
+        emit(TaskState(tasks: state.tasks, error: e.toString()));
+      }
     });
 
     on<AddTask>((event, emit) async {
-      // Create the new task
-      final newTask = Task(
-        id: DateTime.now().toString(),
-        title: event.title,
-        isDone: false,
-      );
+      try {
+        final newTask = await apiService.addTodo(
+          event.title,
+          event.description,
+          event.completed,
+          event.dueDate,
+          event.priority,
+          event.category,
+          event.token,
+        );
 
-      // Save to localstore
-      await db.collection(collection).doc(newTask.id).set(newTask.toMap());
-
-      // Update state
-      final updatedTasks = List<Task>.from(state.tasks)..add(newTask);
-      emit(TaskState(tasks: updatedTasks));
+        // Update state
+        final updatedTasks = List<Task>.from(state.tasks)..add(newTask);
+        emit(TaskState(tasks: updatedTasks));
+      } catch (e) {
+        emit(TaskState(tasks: state.tasks, error: e.toString()));
+      }
     });
 
     on<DeleteTask>((event, emit) async {
-      // Remove the task from localstore
-      await db.collection(collection).doc(event.id).delete();
+      try {
+        // Delete the task from the server
+        await apiService.deleteTodo(event.id, event.token);
 
-      // Update state
-      final updatedTasks = state.tasks
-          .where((task) => task.id != event.id)
-          .toList();
-      emit(TaskState(tasks: updatedTasks));
+        // Update state
+        final updatedTasks = state.tasks
+            .where((task) => task.id != event.id)
+            .toList();
+        emit(TaskState(tasks: updatedTasks));
+      } catch (e) {
+        emit(TaskState(tasks: state.tasks, error: e.toString()));
+      }
     });
   }
 }
