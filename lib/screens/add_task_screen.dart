@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_app_flutter/bloc/task_bloc.dart';
 import 'package:todo_app_flutter/bloc/task_event.dart';
+import 'package:todo_app_flutter/services/auth_storage.dart';
 
 class AddTaskScreen extends StatelessWidget {
-  final TextEditingController _taskController = TextEditingController();
+  final TextEditingController _taskTitleController = TextEditingController();
 
   AddTaskScreen({super.key});
 
-  void _addTask(BuildContext context) {
-    final taskText = _taskController.text;
+  void _addTask(BuildContext context) async {
+    final taskText = _taskTitleController.text;
     if (taskText.isNotEmpty) {
-      context.read<TaskBloc>().add(AddTask(taskText));
+      final token = await AuthStorage.getToken();
+      context.read<TaskBloc>().add(AddTask(taskText, token ?? ''));
       Navigator.of(context).pop();
     }
   }
@@ -25,7 +27,7 @@ class AddTaskScreen extends StatelessWidget {
         child: Column(
           children: <Widget>[
             TextField(
-              controller: _taskController,
+              controller: _taskTitleController,
               decoration: InputDecoration(labelText: 'Task'),
             ),
             SizedBox(height: 20),
