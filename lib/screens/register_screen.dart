@@ -61,7 +61,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               obscureText: true,
             ),
             if (_error != null)
-              Text(_error!, style: TextStyle(color: Colors.red)),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(_error!, style: TextStyle(color: Colors.red)),
+              ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _loading ? null : _register,

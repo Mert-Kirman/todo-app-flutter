@@ -75,6 +75,9 @@ class _LoginScreenState extends State<LoginScreen> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pushNamed('/register');
+                setState(() {
+                  _error = null;
+                });
               },
               child: Text('Register'),
             ),
