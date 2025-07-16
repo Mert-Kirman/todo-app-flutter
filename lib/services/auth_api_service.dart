@@ -22,7 +22,11 @@ class AuthApiService {
     final response = await http.post(
       Uri.parse('$baseUrl/users/register'),
       headers: {'Content-Type': 'application/json'},
-      body: json.encode({'username': username, 'password': password}),
+      body: json.encode({
+        'username': username,
+        'email': email,
+        'password': password,
+      }),
     );
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Registration failed: ${response.body}');
