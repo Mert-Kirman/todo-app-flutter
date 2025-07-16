@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:todo_app_flutter/screens/home_screen.dart';
 import '../services/auth_api_service.dart';
 import '../services/auth_storage.dart';
 
@@ -31,7 +32,10 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       // Navigate to home screen
-      Navigator.of(context).pushReplacementNamed('/');
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => HomeScreen()),
+        (route) => false,
+      );
     } catch (e) {
       setState(() {
         _error = e.toString();
