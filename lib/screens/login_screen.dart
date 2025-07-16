@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:todo_app_flutter/screens/home_screen.dart';
+import 'package:todo_app_flutter/bloc/auth_bloc.dart';
+import 'package:todo_app_flutter/bloc/auth_event.dart';
 import '../services/auth_api_service.dart';
-import '../services/auth_storage.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,16 +27,8 @@ class _LoginScreenState extends State<LoginScreen> {
         _usernameController.text,
         _passwordController.text,
       );
-      await AuthStorage.saveToken(token);
-
-      // Ensure the widget is still mounted before navigating
       if (!mounted) return;
-
-      // Navigate to home screen
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => HomeScreen()),
-        (route) => false,
-      );
+      context.read<AuthBloc>().add(LoggedIn(token));
     } catch (e) {
       setState(() {
         _error = e.toString();

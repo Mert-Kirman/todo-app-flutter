@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:todo_app_flutter/bloc/auth_bloc.dart';
+import 'package:todo_app_flutter/bloc/auth_event.dart';
 import 'package:todo_app_flutter/bloc/task_bloc.dart';
 import 'package:todo_app_flutter/bloc/task_event.dart';
 import 'package:todo_app_flutter/bloc/task_state.dart';
@@ -18,11 +20,7 @@ class HomeScreen extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: () async {
-              await AuthStorage.deleteToken();
-              if (!context.mounted) return;
-              Navigator.of(
-                context,
-              ).pushNamedAndRemoveUntil('/login', (route) => false);
+              context.read<AuthBloc>().add(LoggedOut());
             },
           ),
         ],

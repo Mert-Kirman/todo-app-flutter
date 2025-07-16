@@ -2,33 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:todo_app_flutter/bloc/task_event.dart';
 import 'package:todo_app_flutter/screens/login_screen.dart';
 import 'package:todo_app_flutter/screens/register_screen.dart';
-import 'package:todo_app_flutter/services/auth_storage.dart';
 import 'screens/home_screen.dart';
 import 'screens/add_task_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'bloc/task_bloc.dart';
+import 'bloc/auth_bloc.dart';
+import 'bloc/auth_event.dart';
+import 'bloc/auth_state.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  final token = await AuthStorage.getToken();
-  runApp(MyTodoApp(isLoggedIn: token != null, token: token ?? ''));
+  runApp(MyTodoApp());
 }
 
 class MyTodoApp extends StatelessWidget {
-  final bool isLoggedIn;
-  final String token;
-  const MyTodoApp({required this.isLoggedIn, required this.token, super.key});
+  const MyTodoApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) {
-        final taskBloc = TaskBloc();
-        if (isLoggedIn) {
-          taskBloc.add(LoadTasks(token));
-        }
-        return taskBloc;
-      },
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>(
+          create: (context) => AuthBloc()..add(AppStarted()),
+        ),
+        BlocProvider<TaskBloc>(create: (context) => TaskBloc()),
+      ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Todo App',
@@ -38,24 +36,21 @@ class MyTodoApp extends StatelessWidget {
             brightness: Brightness.dark,
           ),
         ),
-        home: isLoggedIn ? HomeScreen() : LoginScreen(),
-        onGenerateRoute: (settings) {
-          // any manual navigation uses Navigator.pushNamed
-          Widget page;
-          switch (settings.name) {
-            case '/register':
-              page = RegisterScreen();
-              break;
-            case '/add-task':
-              page = AddTaskScreen();
-              break;
-            case '/': // user tried to navigate to Home manually
-              page = isLoggedIn ? HomeScreen() : LoginScreen();
-              break;
-            default:
-              page = isLoggedIn ? HomeScreen() : LoginScreen();
-          }
-          return MaterialPageRoute(builder: (_) => page);
+        home: BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, state) {
+            if (state is AuthAuthenticated) {
+              context.read<TaskBloc>().add(LoadTasks(state.token));
+              return HomeScreen();
+            } else if (state is AuthUnauthenticated) {
+              return LoginScreen();
+            }
+            return Scaffold(body: Center(child: CircularProgressIndicator()));
+          },
+        ),
+        routes: {
+          '/login': (context) => LoginScreen(),
+          '/register': (context) => RegisterScreen(),
+          '/add-task': (context) => AddTaskScreen(),
         },
       ),
     );
