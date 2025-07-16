@@ -11,22 +11,20 @@ import 'bloc/task_bloc.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final token = await AuthStorage.getToken();
-  runApp(
-    MyTodoApp(initialRoute: token == null ? '/login' : '/', token: token ?? ''),
-  );
+  runApp(MyTodoApp(isLoggedIn: token != null, token: token ?? ''));
 }
 
 class MyTodoApp extends StatelessWidget {
-  final String initialRoute;
+  final bool isLoggedIn;
   final String token;
-  const MyTodoApp({required this.initialRoute, required this.token, super.key});
+  const MyTodoApp({required this.isLoggedIn, required this.token, super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) {
         final taskBloc = TaskBloc();
-        if (token.isNotEmpty) {
+        if (isLoggedIn) {
           taskBloc.add(LoadTasks(token));
         }
         return taskBloc;
@@ -40,12 +38,24 @@ class MyTodoApp extends StatelessWidget {
             brightness: Brightness.dark,
           ),
         ),
-        initialRoute: initialRoute,
-        routes: {
-          '/': (ctx) => HomeScreen(),
-          '/login': (ctx) => LoginScreen(),
-          '/register': (ctx) => RegisterScreen(),
-          '/add-task': (ctx) => AddTaskScreen(),
+        home: isLoggedIn ? HomeScreen() : LoginScreen(),
+        onGenerateRoute: (settings) {
+          // any manual navigation uses Navigator.pushNamed
+          Widget page;
+          switch (settings.name) {
+            case '/register':
+              page = RegisterScreen();
+              break;
+            case '/add-task':
+              page = AddTaskScreen();
+              break;
+            case '/': // user tried to navigate to Home manually
+              page = isLoggedIn ? HomeScreen() : LoginScreen();
+              break;
+            default:
+              page = isLoggedIn ? HomeScreen() : LoginScreen();
+          }
+          return MaterialPageRoute(builder: (_) => page);
         },
       ),
     );
