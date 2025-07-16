@@ -36,8 +36,7 @@ class HomeScreen extends StatelessWidget {
             itemBuilder: (ctx, index) {
               final task = tasks[index];
               return TaskTile(
-                title: task.title,
-                completed: task.completed,
+                task: task,
                 onChanged: (value) async {
                   final token = await AuthStorage.getToken();
                   if (token == null) {
