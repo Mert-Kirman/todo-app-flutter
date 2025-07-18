@@ -5,11 +5,45 @@ import 'package:todo_app_flutter/bloc/auth_event.dart';
 import 'package:todo_app_flutter/bloc/task_bloc.dart';
 import 'package:todo_app_flutter/bloc/task_event.dart';
 import 'package:todo_app_flutter/bloc/task_state.dart';
+import 'package:todo_app_flutter/models/task.dart';
 import 'package:todo_app_flutter/services/auth_storage.dart';
 import '../widgets/task_tile.dart';
 
-class HomeScreen extends StatelessWidget {
+enum TaskSortType { createdAt, dueDate, priority, title }
+
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  TaskSortType currentSortType = TaskSortType.createdAt;
+
+  List<Task> _getSortedTasks(List<Task> tasks, TaskSortType sortType) {
+    final sorted = List<Task>.from(tasks);
+    switch (sortType) {
+      case TaskSortType.createdAt:
+        sorted.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        break;
+      case TaskSortType.dueDate:
+        sorted.sort((a, b) {
+          if (a.dueDate == null && b.dueDate == null) return 0;
+          if (a.dueDate == null) return 1;
+          if (b.dueDate == null) return -1;
+          return a.dueDate!.compareTo(b.dueDate!);
+        });
+        break;
+      case TaskSortType.priority:
+        sorted.sort((a, b) => b.priority.compareTo(a.priority));
+        break;
+      case TaskSortType.title:
+        sorted.sort((a, b) => a.title.compareTo(b.title));
+        break;
+    }
+    return sorted;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +51,37 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('Todo List'),
         actions: [
+          IconButton(
+            icon: Icon(Icons.sort),
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                builder: (context) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: TaskSortType.values.map((sortType) {
+                      return ListTile(
+                        title: Text(sortType.toString().split('.').last),
+                        // Highlight the currently selected sort type
+                        tileColor: currentSortType == sortType
+                            ? Colors.teal
+                            : null,
+                        trailing: currentSortType == sortType
+                            ? Icon(Icons.check)
+                            : null,
+                        onTap: () {
+                          setState(() {
+                            currentSortType = sortType;
+                          });
+                          Navigator.of(context).pop();
+                        },
+                      );
+                    }).toList(),
+                  );
+                },
+              );
+            },
+          ),
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: () async {
@@ -31,10 +96,11 @@ class HomeScreen extends StatelessWidget {
             return Center(child: Text('Error: ${state.error}'));
           }
           final tasks = state.tasks;
+          final sortedTasks = _getSortedTasks(tasks, currentSortType);
           return ListView.builder(
             itemCount: tasks.length,
             itemBuilder: (ctx, index) {
-              final task = tasks[index];
+              final task = sortedTasks[index];
               return TaskTile(
                 task: task,
                 onChanged: (value) async {
