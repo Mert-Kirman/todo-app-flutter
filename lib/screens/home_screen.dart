@@ -19,7 +19,15 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  String? currentCategoryFilter; // null means "all categories"
   TaskSortType currentSortType = TaskSortType.createdAt;
+
+  List<Task> _getFilteredTasks(List<Task> tasks, String? category) {
+    if (category == null || category.isEmpty) return tasks;
+    return tasks
+        .where((task) => task.category?.toLowerCase() == category)
+        .toList();
+  }
 
   List<Task> _getSortedTasks(List<Task> tasks, TaskSortType sortType) {
     final sorted = List<Task>.from(tasks);
@@ -53,6 +61,56 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text('Todo List'),
         actions: [
+          IconButton(
+            icon: Icon(Icons.filter_list),
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                builder: (context) {
+                  // Get unique categories from tasks
+                  final categories = context
+                      .read<TaskBloc>()
+                      .state
+                      .tasks
+                      .map((t) => t.category?.toLowerCase())
+                      .where((c) => c != null && c.isNotEmpty)
+                      .toSet()
+                      .toList();
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        title: Text('All Categories'),
+                        tileColor: currentCategoryFilter == null
+                            ? Colors.teal
+                            : null,
+                        onTap: () {
+                          setState(() {
+                            currentCategoryFilter = null; // Reset filter
+                          });
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      ...categories.map(
+                        (category) => ListTile(
+                          title: Text(category!),
+                          tileColor: currentCategoryFilter == category
+                              ? Colors.teal
+                              : null,
+                          onTap: () {
+                            setState(() {
+                              currentCategoryFilter = category; // Set filter
+                            });
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
           IconButton(
             icon: Icon(Icons.sort),
             onPressed: () {
@@ -98,9 +156,10 @@ class _HomeScreenState extends State<HomeScreen> {
             return Center(child: Text('Error: ${state.error}'));
           }
           final tasks = state.tasks;
-          final sortedTasks = _getSortedTasks(tasks, currentSortType);
+          final filteredTasks = _getFilteredTasks(tasks, currentCategoryFilter);
+          final sortedTasks = _getSortedTasks(filteredTasks, currentSortType);
           return ListView.builder(
-            itemCount: tasks.length,
+            itemCount: filteredTasks.length,
             itemBuilder: (ctx, index) {
               final task = sortedTasks[index];
               return TaskTile(
