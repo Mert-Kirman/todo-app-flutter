@@ -39,7 +39,9 @@ class _HomeScreenState extends State<HomeScreen> {
         sorted.sort((a, b) => b.priority.compareTo(a.priority));
         break;
       case TaskSortType.title:
-        sorted.sort((a, b) => a.title.compareTo(b.title));
+        sorted.sort(
+          (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
+        );
         break;
     }
     return sorted;
